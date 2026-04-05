@@ -85,7 +85,6 @@ export default function NewMeeting({ setPage }) {
 
       <div className="bg-white/90 backdrop-blur-lg w-full max-w-3xl rounded-2xl shadow-2xl p-6 space-y-6 border border-gray-200">
 
-        {/* HEADER */}
         <div className="text-center pb-4 border-b">
           <h2 className="text-2xl font-bold text-indigo-700">
             New Meeting
@@ -95,7 +94,6 @@ export default function NewMeeting({ setPage }) {
           </p>
         </div>
 
-        {/* DATE */}
         <div>
           <label className="text-sm font-medium text-gray-600">Meeting Date</label>
           <input
@@ -138,7 +136,6 @@ export default function NewMeeting({ setPage }) {
         <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-xl border">
           <h3 className="font-semibold mb-3 text-purple-700">Finance</h3>
 
-          {/* Previous Funds */}
           <div className="mb-3">
             <label className="text-sm text-gray-600">Previous Funds</label>
 
@@ -165,7 +162,6 @@ export default function NewMeeting({ setPage }) {
             />
           </div>
 
-          {/* EXPENSE TABLE */}
           <div className="overflow-hidden rounded-xl border bg-white shadow-sm">
             <table className="w-full text-sm">
               <thead className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white">
@@ -205,7 +201,6 @@ export default function NewMeeting({ setPage }) {
             </table>
           </div>
 
-          {/* ✅ ADDED BUTTON ONLY (no other changes) */}
           <button
             onClick={addExpense}
             className="mt-2 text-sm bg-purple-500 text-white px-3 py-1 rounded-lg hover:bg-purple-600"
@@ -220,7 +215,6 @@ export default function NewMeeting({ setPage }) {
             Final Remaining: ₱ {finalRemaining}
           </p>
 
-          {/* Monthly Collection */}
           <div className="mt-3">
             <label className="text-sm text-gray-600">Monthly Collection</label>
 
@@ -342,9 +336,16 @@ export default function NewMeeting({ setPage }) {
               />
             </div>
           ))}
+
+          {/* ✅ ADDED ONLY */}
+          <button
+            onClick={addActivity}
+            className="text-sm bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600"
+          >
+            + Add Another Activity
+          </button>
         </div>
 
-        {/* ACTIONS */}
         <div className="flex justify-between pt-4 border-t">
           <button
             onClick={() => setPage("dashboard")}
