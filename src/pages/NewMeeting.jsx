@@ -1,13 +1,17 @@
 import { useState } from "react";
+import { db } from "../firebase";
+import { collection, addDoc } from "firebase/firestore";
 
 export default function NewMeeting({ setPage }) {
   const [form, setForm] = useState({
     date: "",
     attendance: [
+      { label: "Presider", name: "" },
       { label: "Opening Prayer", name: "" },
       { label: "Worship Leader", name: "" },
       { label: "Short Message", name: "" },
       { label: "Closing Prayer", name: "" }
+      
     ],
     previous: { amount: "", date: "" },
     expenses: [{ name: "", amount: "" }],
@@ -52,6 +56,7 @@ export default function NewMeeting({ setPage }) {
     });
   };
 
+  // calculations
   const totalExpenses = form.expenses.reduce(
     (sum, e) => sum + Number(e.amount || 0),
     0
@@ -63,21 +68,25 @@ export default function NewMeeting({ setPage }) {
   const finalRemaining =
     balanceAfterExpenses + Number(form.collection.amount || 0);
 
-  const save = () => {
+  // ✅ FIREBASE SAVE
+  const save = async () => {
     if (!form.date) return alert("Lagyan ng meeting date");
 
-    const data = JSON.parse(localStorage.getItem("meetings")) || [];
+    try {
+      await addDoc(collection(db, "meetings"), {
+        ...form,
+        totalExpenses,
+        remaining: finalRemaining,
+        createdAt: new Date()
+      });
 
-    data.push({
-      ...form,
-      totalExpenses,
-      remaining: finalRemaining
-    });
+      alert("Saved!");
+      setPage("dashboard");
 
-    localStorage.setItem("meetings", JSON.stringify(data));
-
-    alert("Saved!");
-    setPage("dashboard");
+    } catch (error) {
+      console.error(error);
+      alert("Error saving data");
+    }
   };
 
   return (
@@ -94,6 +103,7 @@ export default function NewMeeting({ setPage }) {
           </p>
         </div>
 
+        {/* DATE */}
         <div>
           <label className="text-sm font-medium text-gray-600">Meeting Date</label>
           <input
@@ -113,7 +123,6 @@ export default function NewMeeting({ setPage }) {
             <div key={i} className="mb-2">
               <p className="text-xs text-gray-500">{a.label}</p>
               <input
-                placeholder="Enter name"
                 className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-300"
                 onChange={(e) => {
                   const arr = [...form.attendance];
@@ -162,6 +171,7 @@ export default function NewMeeting({ setPage }) {
             />
           </div>
 
+          {/* EXPENSES TABLE */}
           <div className="overflow-hidden rounded-xl border bg-white shadow-sm">
             <table className="w-full text-sm">
               <thead className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white">
@@ -176,7 +186,6 @@ export default function NewMeeting({ setPage }) {
                     <td className="p-1">
                       <input
                         className="w-full p-2 outline-none"
-                        placeholder="Name"
                         onChange={(ev) => {
                           const arr = [...form.expenses];
                           arr[i].name = ev.target.value;
@@ -187,7 +196,6 @@ export default function NewMeeting({ setPage }) {
                     <td className="p-1">
                       <input
                         className="w-full p-2 outline-none"
-                        placeholder="₱"
                         onChange={(ev) => {
                           const arr = [...form.expenses];
                           arr[i].amount = ev.target.value;
@@ -208,11 +216,11 @@ export default function NewMeeting({ setPage }) {
             + Add Another Expense
           </button>
 
-          <p className="text-sm mt-2">Total Expenses: ₱ {totalExpenses}</p>
+          <p className="text-sm mt-2">Total Expense: ₱ {totalExpenses}</p>
           <p className="text-sm">Balance: ₱ {balanceAfterExpenses}</p>
 
           <p className="font-semibold mt-2 text-indigo-700">
-            Final Remaining: ₱ {finalRemaining}
+            Cash on hand: ₱ {finalRemaining}
           </p>
 
           <div className="mt-3">
@@ -256,7 +264,6 @@ export default function NewMeeting({ setPage }) {
             <textarea
               key={i}
               className="w-full border rounded-lg p-2 mb-2 focus:ring-2 focus:ring-pink-300"
-              placeholder="Enter agenda"
               onChange={(e) => {
                 const arr = [...form.agendas];
                 arr[i] = e.target.value;
@@ -289,7 +296,6 @@ export default function NewMeeting({ setPage }) {
                   <td className="p-1">
                     <input
                       className="w-full p-2 outline-none"
-                      placeholder="Enter note"
                       onChange={(e) => {
                         const arr = [...form.notes];
                         arr[i] = e.target.value;
@@ -318,7 +324,7 @@ export default function NewMeeting({ setPage }) {
             <div key={i} className="mb-3">
               <input
                 type="date"
-                className="w-full border rounded-lg p-2 mb-1 focus:ring-2 focus:ring-blue-300"
+                className="w-full border rounded-lg p-2 mb-1"
                 onChange={(e) => {
                   const arr = [...form.activities];
                   arr[i].date = e.target.value;
@@ -326,8 +332,7 @@ export default function NewMeeting({ setPage }) {
                 }}
               />
               <textarea
-                className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-blue-300"
-                placeholder="Activity details"
+                className="w-full border rounded-lg p-2"
                 onChange={(e) => {
                   const arr = [...form.activities];
                   arr[i].text = e.target.value;
@@ -337,7 +342,6 @@ export default function NewMeeting({ setPage }) {
             </div>
           ))}
 
-          {/* ✅ ADDED ONLY */}
           <button
             onClick={addActivity}
             className="text-sm bg-blue-500 text-white px-3 py-1 rounded-lg hover:bg-blue-600"
@@ -346,6 +350,7 @@ export default function NewMeeting({ setPage }) {
           </button>
         </div>
 
+        {/* BUTTONS */}
         <div className="flex justify-between pt-4 border-t">
           <button
             onClick={() => setPage("dashboard")}
@@ -361,6 +366,7 @@ export default function NewMeeting({ setPage }) {
             Save Meeting
           </button>
         </div>
+
       </div>
     </div>
   );

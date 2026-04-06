@@ -1,13 +1,47 @@
 import { useState, useEffect } from "react";
+import { collection, getDocs, deleteDoc, doc, updateDoc } from "firebase/firestore";
+import { db } from "../firebase";
 
 export default function MeetingRecord({ setPage }) {
   const [meetings, setMeetings] = useState([]);
   const [year, setYear] = useState("");
   const [month, setMonth] = useState("");
 
+  // ✅ FETCH FROM FIREBASE
   useEffect(() => {
-    setMeetings(JSON.parse(localStorage.getItem("meetings")) || []);
+    const fetchData = async () => {
+      const querySnapshot = await getDocs(collection(db, "meetings"));
+      const data = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setMeetings(data);
+    };
+
+    fetchData();
   }, []);
+
+  // ✅ DELETE
+  const handleDelete = async (id) => {
+    if (!confirm("Sigurado ka gusto mo i-delete?")) return;
+
+    await deleteDoc(doc(db, "meetings", id));
+    setMeetings(meetings.filter(m => m.id !== id));
+  };
+
+  // ✅ EDIT (simple muna - date lang)
+  const handleEdit = async (m) => {
+    const newDate = prompt("Edit Meeting Date:", m.date);
+    if (!newDate) return;
+
+    await updateDoc(doc(db, "meetings", m.id), {
+      date: newDate
+    });
+
+    setMeetings(meetings.map(item =>
+      item.id === m.id ? { ...item, date: newDate } : item
+    ));
+  };
 
   const years = [...new Set(meetings.map(m => new Date(m.date).getFullYear()))];
 
@@ -75,7 +109,24 @@ export default function MeetingRecord({ setPage }) {
           )}
 
           {filtered.map((m, i) => (
-            <div key={i} className="bg-white border rounded-xl shadow p-5 space-y-4">
+            <div key={i} className="bg-white border rounded-xl shadow p-5 space-y-4 hover:shadow-lg transition">
+
+              {/* 🔥 EDIT & DELETE BUTTONS */}
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => handleEdit(m)}
+                  className="text-xs bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-lg"
+                >
+                  Edit
+                </button>
+
+                <button
+                  onClick={() => handleDelete(m.id)}
+                  className="text-xs bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg"
+                >
+                  Delete
+                </button>
+              </div>
 
               {/* DATE HEADER */}
               <div className="flex justify-between border-b pb-2">
@@ -88,7 +139,7 @@ export default function MeetingRecord({ setPage }) {
               {/* ATTENDANCE */}
               <div>
                 <h4 className="font-semibold mb-2 text-emerald-600">Attendance</h4>
-                <table className="w-full text-sm border">
+                <table className="w-full text-sm border rounded-lg overflow-hidden">
                   <thead className="bg-emerald-500 text-white">
                     <tr>
                       <th className="p-2">Role</th>
@@ -119,7 +170,7 @@ export default function MeetingRecord({ setPage }) {
               {/* ACTIVITIES */}
               <div>
                 <h4 className="font-semibold mb-2 text-blue-600">Activities</h4>
-                <table className="w-full text-sm border">
+                <table className="w-full text-sm border rounded-lg overflow-hidden">
                   <thead className="bg-blue-500 text-white">
                     <tr>
                       <th className="p-2">Date</th>
@@ -153,24 +204,24 @@ export default function MeetingRecord({ setPage }) {
 
                 <div className="grid md:grid-cols-4 gap-3 text-sm">
 
-                  <div className="bg-gray-50 p-3 rounded">
+                  <div className="bg-gray-50 p-3 rounded-lg shadow-sm">
                     <p className="text-gray-500">Previous</p>
                     <p className="font-bold">₱ {m.previous?.amount || 0}</p>
                     <p className="text-xs text-gray-400">{m.previous?.date}</p>
                   </div>
 
-                  <div className="bg-gray-50 p-3 rounded">
+                  <div className="bg-gray-50 p-3 rounded-lg shadow-sm">
                     <p className="text-gray-500">Expenses</p>
                     <p className="font-bold">₱ {m.totalExpenses}</p>
                   </div>
 
-                  <div className="bg-gray-50 p-3 rounded">
+                  <div className="bg-gray-50 p-3 rounded-lg shadow-sm">
                     <p className="text-gray-500">Collection</p>
                     <p className="font-bold">₱ {m.collection?.amount || 0}</p>
                     <p className="text-xs text-gray-400">{m.collection?.date}</p>
                   </div>
 
-                  <div className="bg-emerald-100 p-3 rounded">
+                  <div className="bg-emerald-100 p-3 rounded-lg shadow-sm">
                     <p className="text-gray-600">Remaining</p>
                     <p className="font-bold text-emerald-700">
                       ₱ {m.remaining}
